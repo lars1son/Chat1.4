@@ -1,6 +1,7 @@
 package com.chat.my.validator;
 
-import com.chat.my.model.User;
+
+import com.chat.my.model.UserEntity;
 import com.chat.my.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,12 +18,12 @@ public class UserValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> aClass) {
-        return User.class.equals(aClass);
+        return UserEntity.class.equals(aClass);
     }
 
     @Override
     public void validate(Object o, Errors errors) {
-        User user = (User) o;
+        UserEntity user = (UserEntity) o;
 
         ValidationUtils.rejectIfEmptyOrWhitespace(errors, "username", "Required");
         if (user.getUsername().length() < 8 || user.getUsername().length() > 32) {

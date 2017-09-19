@@ -1,0 +1,22 @@
+1.  @RequestMapping(value = "/dialog", method = RequestMethod.GET)
+       public String dialog(Model model, HttpServletRequest request) {
+           //////----Check if dialog'S alredy existed
+           if ((request.getParameter("user1") != null) && (request.getParameter("user2") != null)) {
+
+               if (!DialogsMap.dialogsUserMap.containsKey(request.getParameter("user1") + request.getParameter("user2"))) {
+                   DialogsMap.dialogsUserMap.put(request.getParameter("user1") + request.getParameter("user2"), new Dialog(new User(OnlineUsersMap.onlineUserMap.get(request.getParameter("user1"))), new User(OnlineUsersMap.onlineUserMap.get(request.getParameter("user2")))));
+               }
+               model.addAttribute("user1", request.getParameter("user1"));
+               model.addAttribute("user2", request.getParameter("user2"));
+               model.addAttribute("whos", request.getParameter("whos"));
+               model.addAttribute("image_path","/resources/images/loaded/rasta_back");
+               ////creating new dialog
+       //        DialogEntity dialogEntity= new DialogEntity(request.getParameter("user1"),request.getParameter("user2"));
+      //         dialogService.save(dialogEntity);
+           }
+           return "dialog";
+       }
+
+
+
+ 3. Make additional options for admins

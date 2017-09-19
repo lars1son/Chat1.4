@@ -8,62 +8,82 @@
     <title>Chat Page</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
     <script src="${pageContext.request.contextPath}/resources/scripts/chatScript.js"></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common.css">
     <script>
-        var socket = new WebSocket("ws://"+ document.location.host + document.location.pathname + "/chat" );
+        var socket = new WebSocket("ws://" + document.location.host + "/chat");
 
         socket.onopen = function (event) {
-            alert("Соединение открылось");
+
+               // alert("Соединение открылось" );
 
         };
         socket.onclose = function () {
-            // alert("Соединение закрылось");
+            //         alert("Соединение закрылось");
         };
         socket.onmessage = function (event) {
-            alert("message")
+            //        alert("message")
             var xmlDoc, message, value;
             message = event.data;
-
             xmlDoc = parseXmlFromString(message);
-
+        //    alert(new XMLSerializer().serializeToString(xmlDoc.documentElement));
             if (xmlDoc.getElementsByTagName("onlineusers").item(0).attributes.getNamedItem("logins").nodeValue != "") {
-                onlineUsersHandler(xmlDoc, "HERE MUST BE UR NICKNAME");
+              //  alert("1 if   " + "${pageContext.request.userPrincipal.name}");
+
+                onlineUsersHandler(xmlDoc, "${pageContext.request.userPrincipal.name}");
+
             }
 
             if (xmlDoc.getElementsByTagName("message").item(0).attributes.getNamedItem("textofthemessage").nodeValue != "") {
                 messagesDequeHandler(xmlDoc);
+    //            alert("2 if")
+
             }
 
             if (xmlDoc.getElementsByTagName("dialogrequest").item(0).attributes.getNamedItem("whos").nodeValue != "") {
                 dialogRequestHandler(xmlDoc, "${pageContext.request.contextPath}");
+     //           alert("3 if")
+
             }
         };
 
     </script>
+    <style>
+        html {
+            height: 100%;
+        }
 
+        body {
+            margin: 0; /* Убираем отступы */
+            height: 100%; /* Высота страницы */
+            background: url(${pageContext.request.contextPath}/resources/images/RiBaKaTeSkur.jpg); /* Параметры фона */
+            background-size: cover; /* Фон занимает всю доступную площадь */
+        }
+    </style>
 </head>
 <body bgcolor="#E8E8E8">
-
-<%--<form action="<%=request.getContextPath()%>/chat" method="POST">--%>
-
-<div style="background-image:url(${pageContext.request.contextPath}/webapp/images/texture.jpg); background-repeat:repeat; width: 100%; height: 150px">
-
-    <img src="${pageContext.request.contextPath}/resources/images/logo.png" width="228" height="150"
-         style="margin: 0px 0px 0px 0px"/>
+<img src="${pageContext.request.contextPath}/resources/images/logo.png" width="228" height="150"
+     style="margin: 0px 0px 0px 0px"/>
 
 </div>
-
 <div style="width: 20%; padding:0px 10px 10px 10px; margin: 0px; position: absolute;">
     <table border="0">
         <tr>
             <td style="width:20%;">
-                <h3 style="color: #f03b25; text-align: left;"> Welcome ${pageContext.request.userPrincipal.name} </h3>
+                <h3 style="color: #f03b25; text-align: left;"> Welcome ${username} </h3>
                 <form action="${pageContext.request.contextPath}/logOut" method="POST">
                     <%--<input type="submit" value="LogOut" onclick="socket.send(generateLogoutMessage());"/>--%>
                     <button type="submit" value="LogOut" onclick="socket.send(generateLogoutMessage());">
                         <img src="${pageContext.request.contextPath}/resources/images/logout.png" width="64" height="15"
                              style="margin: 0px 0px 0px 0px" alt="Logout">
                     </button>
+
                 </form>
+
+                    <button type="submit" value="MyProfile" onclick="myProfile();">
+                        <img src="${pageContext.request.contextPath}/resources/images/profile.png" width="64" height="15"
+                             style="margin: 0px 0px 0px 0px" alt="Profile">
+                    </button>
+
                 <h4 style="color: #4e4e4e; text-align: left;">You can click on a nick to start dialogue.</h4>
                 <h3 style="color: #4e4e4e; text-align: left;">Online users:</h3>
             </td>
@@ -96,7 +116,6 @@
         </tr>
     </table>
 </div>
-
 </body>
 </html>
 

@@ -46,3 +46,10 @@ body {
 .has-error {
     color: red
 }
+#userBlock {
+    transition: 0.5s;
+}
+#userBlock:hover {
+    transition: 0.5s;
+    background: #bc04f9;
+}

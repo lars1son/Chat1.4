@@ -7,37 +7,54 @@ import com.chat.my.generics.MessagesDeque;
 import com.chat.my.generics.OnlineUsersMap;
 
 import com.chat.my.model.User;
+import com.chat.my.model.UserEntity;
+import org.apache.taglibs.standard.lang.jstl.test.PageContextImpl;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.w3c.dom.Document;
 
+import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.security.Principal;
 
+//// Делаю изменение строки session.getRequestParameterMap.get("username").get(0) на s.GetUserPrincipal().getName()
 @ServerEndpoint(value = "/chat")
 public class ChatSocketManager {
 
     @OnOpen
-    public void open( Session session) {
-        String login = session.getRequestParameterMap().get("username").get(0);
-        OnlineUsersMap.onlineUserMap.get(login).setSession(session);
+    public void open(Session session) {
+        System.out.println("BP: 1 +===================================CONNECTED===================================");
+        System.out.println("BP: 2 PRINCIPAL NAME: " + session.getUserPrincipal().getName());
+//        UserEntity userEntity = (UserEntity) session.getUserPrincipal();
+//        User user = new User();
+//
+//        user.createUserFromUserEntity((UserEntity) session.getAttribute("user"));
+//        System.out.println("BP: 2.1  user.getName:" + user.getUsername());
+//        OnlineUsersMap.onlineUserMap.put(userEntity.getUsername(), user);
+
+        OnlineUsersMap.onlineUserMap.get(session.getUserPrincipal().getName()).setSession(session);
+        System.out.println("BP: 3 GOING TO refreshOnlineUsers");
         refreshOnlineUsers();
-        MessagesDeque.messagesDeque.addFirst(new Message(String.valueOf(session.getRequestParameterMap().get("username").get(0)), " joined us."));
+        MessagesDeque.messagesDeque.addFirst(new Message(String.valueOf(session.getUserPrincipal().getName()), " joined us."));
         refreshMessages();
     }
 
     @OnClose
     public void close(Session session) {
-        MessagesDeque.messagesDeque.addFirst(new Message(session.getRequestParameterMap().get("username").get(0), "left us."));
-        OnlineUsersMap.onlineUserMap.remove(session.getRequestParameterMap().get("username").get(0));
+        MessagesDeque.messagesDeque.addFirst(new Message(session.getUserPrincipal().getName(), "left us."));
+        OnlineUsersMap.onlineUserMap.remove(session.getUserPrincipal().getName());
         refreshOnlineUsers();
         refreshMessages();
     }
 
     @OnError
-    public void onError(Throwable error){}
+    public void onError(Throwable error) {
+    }
 
     @OnMessage
     public void handleMessage(String message, Session session) {
+        System.out.println("+===================================SEND MESSaGE===================================");
+System.out.println(message);
         Document doc = XmlSocketBox.instanse.parseXmlFromString(message);
         if (!doc.getElementsByTagName("message").item(0).getAttributes().getNamedItem("textofthemessage").getNodeValue().equals("")) {
             messagesHandler(session, doc);
@@ -49,11 +66,11 @@ public class ChatSocketManager {
 
     private void messagesHandler(Session session, Document doc) {
         if (doc.getElementsByTagName("message").item(0).getAttributes().getNamedItem("logout").getNodeValue().equals("true")) {
-            OnlineUsersMap.onlineUserMap.remove(session.getRequestParameterMap().get("login").get(0));
+            OnlineUsersMap.onlineUserMap.remove(session.getUserPrincipal().getName());
             refreshOnlineUsers();
         } else {
             String textOfTheMessage = doc.getElementsByTagName("message").item(0).getAttributes().getNamedItem("textofthemessage").getNodeValue();
-            MessagesDeque.messagesDeque.addFirst(new Message(String.valueOf(session.getRequestParameterMap().get("login").get(0)), textOfTheMessage));
+            MessagesDeque.messagesDeque.addFirst(new Message(String.valueOf(session.getUserPrincipal().getName()), textOfTheMessage));
             refreshMessages();
         }
     }
@@ -106,6 +123,7 @@ public class ChatSocketManager {
                 Document doc = XmlSocketBox.instanse.newDocument();
                 doc = XmlSocketBox.instanse.createSocketBox(doc);
                 doc = XmlSocketBox.instanse.setOnlineUsers(doc, OnlineUsersMap.getOnlineUserLoginsThroughTheSpaceLastSpaceIncluding());
+                System.out.println("BP: 4 Reffreshing online Users:" + XmlSocketBox.instanse.generateStringFromXml(doc));
                 temp.getSession().getBasicRemote().sendText(XmlSocketBox.instanse.generateStringFromXml(doc));
             } catch (Exception e) {
                 e.printStackTrace();

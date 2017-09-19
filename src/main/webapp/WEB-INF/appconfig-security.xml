@@ -11,6 +11,8 @@
         <intercept-url pattern="/" access="hasAnyRole('ROLE_USER', 'ROLE_ADMIN')"/>
         <intercept-url pattern="/chat" access="hasAnyRole('ROLE_USER', 'ROLE_ADMIN')"/>
         <intercept-url pattern="/admin" access="hasRole('ROLE_ADMIN')"/>
+        <intercept-url pattern="/profile" access="hasAnyRole('ROLE_USER','ROLE_ADMIN')" />
+        <csrf disabled="true"></csrf>
 
         <form-login login-page="/login" default-target-url="/chat" authentication-failure-url="/login?error"
                     username-parameter="username" password-parameter="password"/>

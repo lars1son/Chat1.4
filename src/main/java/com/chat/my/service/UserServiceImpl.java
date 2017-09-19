@@ -2,15 +2,16 @@ package com.chat.my.service;
 
 import com.chat.my.dao.RoleDao;
 import com.chat.my.dao.UserDao;
+import com.chat.my.model.Image;
 import com.chat.my.model.Role;
-import com.chat.my.model.User;
+
+import com.chat.my.model.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.Set;
-
 
 
 @Service
@@ -26,7 +27,7 @@ public class UserServiceImpl implements UserService {
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
-    public void save(User user) {
+    public void save(UserEntity user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         Set<Role> roles = new HashSet<>();
         roles.add(roleDao.getOne(1L));
@@ -35,7 +36,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findByUsername(String username) {
+    public void save(UserEntity user, Boolean update) {
+
+        userDao.save(user);
+    }
+
+    @Override
+    public UserEntity findByUsername(String username) {
         return userDao.findByUsername(username);
     }
 }

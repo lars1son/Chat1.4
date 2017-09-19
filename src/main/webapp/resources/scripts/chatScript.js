@@ -1,5 +1,5 @@
 function onlineUsersHandler(xmlDoc, login) {
-    value = xmlDoc.getElementsByTagName("onlineusers").item(0).attributes.getNamedItem("logins").nodeValue;
+    var value = xmlDoc.getElementsByTagName("onlineusers").item(0).attributes.getNamedItem("logins").nodeValue;
     document.getElementById('userBlock').innerHTML = parseLogins(value, login);
 }
 
@@ -14,7 +14,10 @@ function messagesDequeHandler(doc) {
     }
     document.getElementById('mainChatTextArea').innerHTML = strResult;
 }
+function myProfile() {
+    window.open("/profile","_blank");
 
+}
 function dialogRequestHandler(doc, contextPath) {
     if (doc.getElementsByTagName("dialogrequest").item(0).attributes.getNamedItem("whos").nodeValue == "onewhocalls") {
         if (confirm("Do you want to start a dialog with " + doc.getElementsByTagName("dialogrequest").item(0).attributes.getNamedItem("onewhocalls").nodeValue + "?")) {
@@ -118,7 +121,10 @@ function createSocketBox() {
     socketBox.appendChild(onlineUsers);
     return doc;
 }
+function buildPath(pageCont,imPath) {
+    return pageCont+imPath;
 
+}
 function setMessage(doc, login, message) {
     doc.getElementsByTagName("message").item(0).attributes.getNamedItem("time").textContent = createTime();
     doc.getElementsByTagName("message").item(0).attributes.getNamedItem("login").textContent = login;

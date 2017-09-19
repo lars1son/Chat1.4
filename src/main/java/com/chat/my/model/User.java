@@ -7,36 +7,40 @@ import javax.websocket.Session;
  */
 public class User extends UserEntity implements Comparable {
 
-  private boolean isOnline;
+    private boolean isOnline;
     private String sex;
     private int age;
-    private String comment;
-    private String email;
-    private String friendsLogins;
+
     private Session session;
 
     public User(String login, String password) {
-         this.sex = null;
-        this.comment = null;
-        this.email = null;
-        this.friendsLogins = "";
+        this.sex = null;
+
+
 
     }
 
     public User(User user) {
-        this.sex = user.getSex();
-        this.comment = user.getComment();
-        this.email = user.getComment();
-        this.friendsLogins = "";
+        this.username=user.getUsername();
 
+
+
+    }
+
+    public User() {
+    }
+
+    public void createUserFromUserEntity(UserEntity userEntity) {
+        this.username = userEntity.getUsername();
+        this.password = userEntity.getPassword();
+        this.id  =  userEntity.getId();
     }
 
     public User(String login, String password, boolean isOnline, String sex, int age, String comment, String email) {
         this.sex = sex;
         this.age = age;
-        this.comment = comment;
-        this.email = email;
-        this.friendsLogins = "";
+
+
     }
 
     public Session getSession() {
@@ -72,29 +76,7 @@ public class User extends UserEntity implements Comparable {
         this.age = age;
     }
 
-    public String getComment() {
-        return comment;
-    }
 
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getFriendsLogins() {
-        return friendsLogins;
-    }
-
-    public void setFriendsLogins(String friendsLogins) {
-        this.friendsLogins = friendsLogins;
-    }
 
     public boolean equals(Object obj) {
         User user = (User) obj;
