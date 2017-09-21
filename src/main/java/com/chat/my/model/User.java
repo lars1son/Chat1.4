@@ -1,11 +1,12 @@
 package com.chat.my.model;
 
 import javax.websocket.Session;
+import java.io.Serializable;
 
 /**
  * Created by Артем on 07.09.2017.
  */
-public class User extends UserEntity implements Comparable {
+public class User extends UserEntity implements Comparable , Serializable {
 
     private boolean isOnline;
     private String sex;

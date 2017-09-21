@@ -65,25 +65,25 @@
             <%--<input type="date" class="form-control" id="exampleInputDOB1" placeholder="Date of Birth">--%>
             <%--</div>--%>
             <%--</form>--%>
-            <form class="form-inline" >
+            <div class="form-inline" >
                 <div class="form-group">
                     <label for="exampleInputEmail2">Email</label>
                     <input type="email" name="email" class="form-control" id="exampleInputEmail2" placeholder="${email}"
                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$">
                 </div>
-            </form>
-            <form class="form-inline">
+            </div>
+            <div class="form-inline">
                 <div class="form-group">
                     <label for="pwd">Password:</label>
                     <input type="password" name="password" class="form-control" id="pwd">
                 </div>
-            </form>
-            <form class="form-inline" >
+            </div>
+            <div class="form-inline" >
                 <div class="form-group">
                     <label for="comment">About:</label>
                     <textarea name="about" class="form-control" rows="5" id="comment" placeholder="${about}"></textarea>
                 </div>
-            </form>
+            </div>
             <button type="submit" class="btn btn-default">Save changes</button>
         </div>
     </div>

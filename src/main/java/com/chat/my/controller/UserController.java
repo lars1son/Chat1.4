@@ -34,7 +34,7 @@ import java.io.*;
 @CrossOrigin
 @Controller
 public class UserController {
-
+    private static final String relative_path="C:\\Users\\Артем.Артем-ПК\\Documents\\Учебники\\Java\\MyChat1.3\\src\\main\\webapp\\resources\\images\\loaded\\";
     @Autowired
     private UserService userService;
 
@@ -64,45 +64,13 @@ public class UserController {
         }
         userForm.setAbout("I'm so shy to tell something :)");
         userForm.setEmail("urEmail@mail.ru");
-        userService.save(userForm);
+        userService.save(userForm,false);
         session.setAttribute("user", userForm);
         securityService.autoLogin(userForm.getUsername(), userForm.getConfirmPassword());
         model.addAttribute("username", userForm.getUsername());
         return "redirect:/chat";
     }
 
-//    @RequestMapping(value = "/change_photo_onDialog", method = RequestMethod.POST)
-//    public String changefont(HttpServletRequest request, Model model, @RequestParam(name = "file", required = false) MultipartFile multipartFile) {
-//        String path;
-//        if (multipartFile != null) {
-//            Dialog dialog= DialogsMap.dialogsUserMap.get(request.getParameter("user1")+request.getParameter("user2"));
-//            //////////Тут дублирование кода, заменить на вызов метода
-//            String newfilename = "dialog_" +request.getParameter("user1")+"_"+request.getParameter("user2")+multipartFile.getOriginalFilename().substring(multipartFile.getOriginalFilename().length() - 4, multipartFile.getOriginalFilename().length());//Поставить на ид польхователя.
-//            path = "C:\\Users\\Артем.Артем-ПК\\Documents\\Учебники\\Java\\MyChat1.3\\src\\main\\webapp\\resources\\images\\loaded\\"+ newfilename;
-//            try {
-//                File file = new File(path);
-//                FileUtils.writeByteArrayToFile(file, multipartFile.getBytes());
-//            } catch (Throwable e) {
-//                e.printStackTrace();
-//            }
-//            path = "/resources/images/loaded/" + newfilename;
-//            Image newIm = new Image(path);
-//            DialogEntity dialogEntity = dialogService.findByUser1User2(dialog.getUser1(),dialog.getUser2());
-//            if (dialogEntity.getImage() == null) {
-//                dialogEntity.setImage(newIm);
-//            } else {
-//                dialogEntity.getImage().setPath(newIm.getPath());
-//            }
-//            dialogService.save(dialogEntity);
-//
-//        } else {
-//            path = "/resources/images/loaded/rasta_back";
-//
-//        }
-//        model.addAttribute("image_path", path);
-//        return "dialog";
-//
-//    }
 
     @RequestMapping(value = "/dialog", method = RequestMethod.GET)
     public String dialog(Model model, HttpServletRequest request) {
@@ -124,21 +92,21 @@ public class UserController {
         }
         return "dialog";
     }
-
-    ////////////////////////////////////////////////////
+    //////////save changes in my profile
     @RequestMapping(value = "/save_changes", method = RequestMethod.POST)
-    public String onAddPhoto(@RequestParam(name = "password", required = false) String password, @RequestParam(name = "email", required = false) String email, @RequestParam(name = "about", required = false) String about, @RequestParam(name = "file", required = false) MultipartFile multipartFile) {
+    public String onAddPhoto(@RequestParam String password, @RequestParam String email, @RequestParam String about, @RequestParam(name = "file", required = false) MultipartFile multipartFile) {
         UserEntity user = getUser();
-        if (multipartFile != null) {
+        if (multipartFile != null && !multipartFile.isEmpty() && multipartFile.getOriginalFilename()!="") {
             String newfilename = user.getId().toString() + multipartFile.getOriginalFilename().substring(multipartFile.getOriginalFilename().length() - 4, multipartFile.getOriginalFilename().length());//Поставить на ид польхователя.
-            String path = "C:\\Users\\Артем.Артем-ПК\\Documents\\Учебники\\Java\\MyChat1.3\\src\\main\\webapp\\resources\\images\\loaded\\" + newfilename;
+            String path = relative_path + newfilename;
             try {
                 File file = new File(path);
                 FileUtils.writeByteArrayToFile(file, multipartFile.getBytes());
             } catch (Throwable e) {
                 e.printStackTrace();
             }
-            path = "/resources/images/loaded/" + newfilename;
+            path = ("/resources/images/loaded/" + newfilename).toLowerCase();
+
             Image newIm = new Image(path);
             if (user.getImage() == null) {
                 user.setImage(newIm);
@@ -148,20 +116,20 @@ public class UserController {
 
 
         }
-        if (password != null && password.length() >= 8) {
+        if (password != null && password.length() >= 8 && password!=user.getPassword()) {
             user.setPassword(password);
         }
-        if (email != null) {
+        if (email != null && !email.isEmpty()) {
             user.setEmail(email);
         }
-        if (about != null) {
+        if (about != null && !about.isEmpty()) {
             user.setAbout(about);
         }
 
         userService.save(user, true);
         return "chat";
     }
-
+///////
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String login(Model model, String error, String logout) {
         if (error != null) {
@@ -175,37 +143,22 @@ public class UserController {
 
         return "login";
     }
-
+/////// chat controller
     @RequestMapping(value = {"/", "/chat"}, method = RequestMethod.GET)
     public String chat(Model model, HttpSession session) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        Object obj = auth.getPrincipal();
-        String username = "";
-
-        if (obj instanceof UserDetails) {
-            username = ((UserDetails) obj).getUsername();
-        } else {
-            username = obj.toString();
-        }
-
-        UserEntity u = userService.findByUsername(username);
+        UserEntity u = getUser();
         User user = new User();
         user.createUserFromUserEntity(u);
         OnlineUsersMap.onlineUserMap.put(u.getUsername(), user);
-        System.out.println(u.getUsername());
         session.setAttribute("user", u);
-        System.out.println("BP: 0    AFTER REDIRECT ");
         model.addAttribute("username", u.getUsername());
-        System.out.println("==================From /chat" + DialogsMap.dialogsUserMap.size());
         return "chat";
     }
 
-
+///////profile controller
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     public String profile(Model model, HttpServletRequest request) {
         UserEntity u = getUser();
-        model.addAttribute("username", u.getUsername());
         model.addAttribute("email", u.getEmail());
         model.addAttribute("about", u.getAbout());
         if (u.getImage() != null) {
@@ -213,13 +166,14 @@ public class UserController {
         } else model.addAttribute("image_path", "resources/images/loaded/standart.jpg");
         return "profile";
     }
-
+//////// Doesn't exist
     @RequestMapping(value = "/admin", method = RequestMethod.GET)
     public String admin(Model model) {
         return "admin";
     }
 
 
+    /// Get UserEntity from authenticaion
     public UserEntity getUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object obj = auth.getPrincipal();

@@ -7,78 +7,95 @@ import com.chat.my.dao.FileDAO;
 import com.chat.my.generics.DialogsMap;
 import com.chat.my.model.DialogEntity;
 import com.chat.my.service.DialogService;
+import com.chat.my.service.UserService;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.server.standard.SpringConfigurator;
 import org.w3c.dom.Document;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.*;
+///////WebSocket for dialog
+@ServerEndpoint(value = "/room", configurator = SpringConfigurator.class)
+@Component
+public class DialogSocketManager implements Serializable {
+    private static final String relative_path="C:\\Users\\Артем.Артем-ПК\\Documents\\Учебники\\Java\\MyChat1.3\\src\\main\\webapp\\resources\\images\\loaded\\";
 
-@ServerEndpoint(value = "/room")
+    private DialogService dialogService;
 
-public class DialogSocketManager {
 
     @Autowired
-    private DialogService dialogService;
+    public DialogSocketManager(DialogService dialogService) {
+
+        this.dialogService = dialogService;
+    }
+
+    public DialogSocketManager() {
+    }
 
     @OnOpen
     public synchronized void open(Session session) {
         if (getDialog(session).getUser1Obj().getSession() == null) {
             getDialog(session).getUser1Obj().setSession(session);
-            System.out.println("Установили сессию для юзера1");
 
         } else {
             getDialog(session).getUser2Obj().setSession(session);
-            System.out.println("Установили сессию для юзера2");
 
-        }System.out.println("Проверка сессий на активность");
-        System.out.println(getDialog(session).getUser1Obj().getSession());
-        System.out.println(getDialog(session).getUser2Obj().getSession());
-        System.out.println(getDialog(session).getUser1Obj().getUsername());
-        System.out.println(getDialog(session).getUser2Obj().getUsername());
+        }
         String u1 = getDialog(session).getUser1Obj().getUsername();
         String u2 = getDialog(session).getUser2Obj().getUsername();
+
+/////load the dialog history if it's exist
         if (getDialog(session).getUser1Obj().getSession() != null && getDialog(session).getUser2Obj().getSession() != null) {
-            DialogEntity dialogEntity = dialogService.findByUser1User2(u1, u2);
-
-
-            if (dialogEntity.getFile() != null) {
-                FileInputStream fin = null;
-                try {
-                    fin = new FileInputStream(dialogEntity.getFile().getPath());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    ObjectInputStream ois = new ObjectInputStream(fin);
+            try {
+                DialogEntity dialogEntity = dialogService.findByUser1User2(u1, u2);
+                if (dialogEntity.getFile() != null) {
+                    readHistoryFromFile(session, dialogEntity);
                     try {
-                        Dialog dialog = (Dialog) ois.readObject();
-                        try {
-                            getDialog(session).getUser1Obj().getSession().getBasicRemote().sendText(dialog.dequeToXmlString());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        try {
-                            getDialog(session).getUser2Obj().getSession().getBasicRemote().sendText(dialog.dequeToXmlString());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    } catch (ClassNotFoundException e) {
+                        getDialog(session).getUser1Obj().getSession().getBasicRemote().sendText(getDialog(session).dequeToXmlString());
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    try {
+                        getDialog(session).getUser2Obj().getSession().getBasicRemote().sendText(getDialog(session).dequeToXmlString());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
+
             }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+
 
 
         }
     }
 
+    public void readHistoryFromFile(Session session, DialogEntity dialogEntity) {
+        try {
+            FileInputStream fis = new FileInputStream(dialogEntity.getFile().getPath());
+            ObjectInputStream oin = new ObjectInputStream(fis);
+            while (true) {
+                try {
+                    getDialog(session).getMessages().addLast((Message) oin.readObject());
+                } catch (EOFException e) {
+                    break;
+                }
+            }
+            fis.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
     @OnClose
-    public void close(Session session) {
+    public void close(Session session, CloseReason closeReason) {
+        System.out.println("CloseReason: "+closeReason.getReasonPhrase());
         closeQuietly(session);
     }
 
@@ -114,27 +131,38 @@ public class DialogSocketManager {
         return DialogsMap.dialogsUserMap.get(session.getRequestParameterMap().get("user1").get(0) + session.getRequestParameterMap().get("user2").get(0));
     }
 
+//////save new history to data base
+    private void updateDialogHisttory(Session session) {
+        DialogEntity dialogEntity = dialogService.findByUser1User2(getDialog(session).getUser1Obj().getUsername(), getDialog(session).getUser2Obj().getUsername());
+
+        String newfilename = "dialog_" + dialogEntity.getId() + ".txt";
+        String path = relative_path + newfilename;
+        try {
+            File file = new File(path);
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream serial = new ObjectOutputStream(fos);
+            for (Message message : getDialog(session).getMessages()) {
+                serial.writeObject(message);
+            }
+            serial.flush();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        com.chat.my.model.File newfile = new com.chat.my.model.File(path);
+
+        if (dialogEntity.getFile() == null) {
+            dialogEntity.setFile(newfile);
+        } else
+            dialogEntity.getFile().setPath(newfile.getPath());
+        dialogService.save(dialogEntity);
+
+    }
+
     public void closeQuietly(Session session) {
         try {
             if (DialogsMap.dialogsUserMap.containsKey(session.getRequestParameterMap().get("user1").get(0) + session.getRequestParameterMap().get("user2").get(0))) {
-                DialogEntity dialogEntity = dialogService.findByUser1User2(getDialog(session).getUser1Obj().getUsername(), getDialog(session).getUser2Obj().getUsername());
-
-                String newfilename = "dialog_" + getDialog(session).getUser1Obj().getUsername() + "_" + getDialog(session).getUser2Obj().getUsername() + ".txt";
-                String path = "C:\\Users\\Артем.Артем-ПК\\Documents\\Учебники\\Java\\MyChat1.3\\src\\main\\webapp\\resources\\images\\loaded\\" + newfilename;
-
-
-                File file = new File(path);
-                FileOutputStream fout = new FileOutputStream(file);
-                ObjectOutputStream oos = new ObjectOutputStream(fout);
-                oos.writeObject(getDialog(session));
-                fout.close();
-                oos.close();
-                if (dialogEntity.getFile() == null) {
-                    com.chat.my.model.File newfile = new com.chat.my.model.File(path);
-                    dialogEntity.setFile(newfile);
-                } else dialogEntity.getFile().setPath(path);
-                dialogService.save(dialogEntity);
-
+                updateDialogHisttory(session);
             }
 
             getDialog(session).getMessages().addFirst(new Message("SERVER", "Your interlocutor has already left the dialog :("));

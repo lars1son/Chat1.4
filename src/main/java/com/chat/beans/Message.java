@@ -1,6 +1,8 @@
 package com.chat.beans;
 
-public class Message {
+import java.io.Serializable;
+
+public class Message implements Serializable{
     private String chatterNick;
     private String message;
     private String time;

@@ -6,7 +6,7 @@ import com.chat.my.model.UserEntity;
 
 public interface UserService {
 
-    void save(UserEntity user);
+
     void save(UserEntity user,Boolean upd);
     UserEntity findByUsername(String username);
 }

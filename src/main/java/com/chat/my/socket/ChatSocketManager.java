@@ -17,23 +17,13 @@ import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.security.Principal;
 
-//// Делаю изменение строки session.getRequestParameterMap.get("username").get(0) на s.GetUserPrincipal().getName()
+/////WebSocket for common chat page
 @ServerEndpoint(value = "/chat")
 public class ChatSocketManager {
 
     @OnOpen
     public void open(Session session) {
-        System.out.println("BP: 1 +===================================CONNECTED===================================");
-        System.out.println("BP: 2 PRINCIPAL NAME: " + session.getUserPrincipal().getName());
-//        UserEntity userEntity = (UserEntity) session.getUserPrincipal();
-//        User user = new User();
-//
-//        user.createUserFromUserEntity((UserEntity) session.getAttribute("user"));
-//        System.out.println("BP: 2.1  user.getName:" + user.getUsername());
-//        OnlineUsersMap.onlineUserMap.put(userEntity.getUsername(), user);
-
         OnlineUsersMap.onlineUserMap.get(session.getUserPrincipal().getName()).setSession(session);
-        System.out.println("BP: 3 GOING TO refreshOnlineUsers");
         refreshOnlineUsers();
         MessagesDeque.messagesDeque.addFirst(new Message(String.valueOf(session.getUserPrincipal().getName()), " joined us."));
         refreshMessages();
@@ -50,34 +40,40 @@ public class ChatSocketManager {
     @OnError
     public void onError(Throwable error) {
     }
-
+/////Get message in Server
     @OnMessage
     public void handleMessage(String message, Session session) {
-        System.out.println("+===================================SEND MESSaGE===================================");
-System.out.println(message);
         Document doc = XmlSocketBox.instanse.parseXmlFromString(message);
+        /////Check if it's message
         if (!doc.getElementsByTagName("message").item(0).getAttributes().getNamedItem("textofthemessage").getNodeValue().equals("")) {
             messagesHandler(session, doc);
         }
+        ////check if it's request for dialog
         if (!doc.getElementsByTagName("dialogrequest").item(0).getAttributes().getNamedItem("whos").getNodeValue().equals("")) {
             dialogRequestHandler(session, doc, message);
         }
     }
-
+///// handle message
     private void messagesHandler(Session session, Document doc) {
+        ///Message: user's logged out
         if (doc.getElementsByTagName("message").item(0).getAttributes().getNamedItem("logout").getNodeValue().equals("true")) {
             OnlineUsersMap.onlineUserMap.remove(session.getUserPrincipal().getName());
             refreshOnlineUsers();
-        } else {
+        }
+        //// simple message
+        else {
+
             String textOfTheMessage = doc.getElementsByTagName("message").item(0).getAttributes().getNamedItem("textofthemessage").getNodeValue();
             MessagesDeque.messagesDeque.addFirst(new Message(String.valueOf(session.getUserPrincipal().getName()), textOfTheMessage));
             refreshMessages();
         }
     }
-
+//////method for habdling dialog request
     private void dialogRequestHandler(Session session, Document doc, String message) {
         String oneWhoCalls = doc.getElementsByTagName("dialogrequest").item(0).getAttributes().getNamedItem("onewhocalls").getNodeValue();
         String theCallee = doc.getElementsByTagName("dialogrequest").item(0).getAttributes().getNamedItem("thecallee").getNodeValue();
+
+    //////if the message from one who send dialog request
         if (doc.getElementsByTagName("dialogrequest").item(0).getAttributes().getNamedItem("whos").getNodeValue().equals("onewhocalls")) {
             try {
                 OnlineUsersMap.onlineUserMap.get(theCallee).getSession().getBasicRemote().sendText(message);
@@ -86,7 +82,9 @@ System.out.println(message);
             }
         }
 
+        //////if the message from one who answer to dialog request
         if (doc.getElementsByTagName("dialogrequest").item(0).getAttributes().getNamedItem("whos").getNodeValue().equals("thecallee")) {
+            ////answer os OK
             if (doc.getElementsByTagName("dialogrequest").item(0).getAttributes().getNamedItem("requestanswer").getNodeValue().equals("true")) {
                 try {
                     OnlineUsersMap.onlineUserMap.get(oneWhoCalls).getSession().getBasicRemote().sendText(message);
@@ -94,6 +92,7 @@ System.out.println(message);
                     e.printStackTrace();
                 }
             }
+            ///answer is NO
             if (doc.getElementsByTagName("dialogrequest").item(0).getAttributes().getNamedItem("requestanswer").getNodeValue().equals("false")) {
                 DialogsMap.dialogsUserMap.remove(oneWhoCalls + theCallee);
                 try {
@@ -104,7 +103,7 @@ System.out.println(message);
             }
         }
     }
-
+///////update massage list
     private void refreshMessages() {
         for (String i : OnlineUsersMap.onlineUserMap.keySet()) {
             User temp = OnlineUsersMap.onlineUserMap.get(i);
@@ -115,7 +114,7 @@ System.out.println(message);
             }
         }
     }
-
+///////update user list
     private void refreshOnlineUsers() {
         for (String i : OnlineUsersMap.onlineUserMap.keySet()) {
             User temp = OnlineUsersMap.onlineUserMap.get(i);
@@ -123,7 +122,6 @@ System.out.println(message);
                 Document doc = XmlSocketBox.instanse.newDocument();
                 doc = XmlSocketBox.instanse.createSocketBox(doc);
                 doc = XmlSocketBox.instanse.setOnlineUsers(doc, OnlineUsersMap.getOnlineUserLoginsThroughTheSpaceLastSpaceIncluding());
-                System.out.println("BP: 4 Reffreshing online Users:" + XmlSocketBox.instanse.generateStringFromXml(doc));
                 temp.getSession().getBasicRemote().sendText(XmlSocketBox.instanse.generateStringFromXml(doc));
             } catch (Exception e) {
                 e.printStackTrace();

@@ -30,7 +30,6 @@ public class Dialog extends DialogEntity implements Serializable {
     public ConcurrentLinkedDeque<Message> getMessages() {
         return messages;
     }
-
     public String dequeToXmlString() {
         return XmlSocketBox.instanse.generateStringFromXml(Util.instanse.dequeToDocument(this.messages));
     }
