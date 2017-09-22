@@ -103,7 +103,7 @@
     </table>
 </div>
 
-<div style="width: 80%; padding: 5px; margin-left: 20%;">
+<div style="width: 79%; padding: 5px; margin-left: 20%;">
     <%--MAIN--%>
 
     <table border="0">

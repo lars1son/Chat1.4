@@ -20,7 +20,25 @@
 
     <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <style>
+        html {
+            height: 100%;
+        }
 
+        <%--body {--%>
+        <%--margin: 0; /* Убираем отступы */--%>
+        <%--height: 100%; /* Высота страницы */--%>
+        <%--background: url(${pageContext.request.contextPath}/resources/images/RiBaKaTeSkur.jpg); /* Параметры фона */--%>
+        <%--background-size: cover; /* Фон занимает всю доступную площадь */--%>
+        <%--}--%>
+        body {
+            background: url(${pageContext.request.contextPath}/resources/images/login_page.jpg); /* Параметры фона */
+            -moz-background-size: 100%; /* Firefox 3.6+ */
+            -webkit-background-size: 100%; /* Safari 3.1+ и Chrome 4.0+ */
+            -o-background-size: 100%; /* Opera 9.6+ */
+            background-size: 100%; /* Современные браузеры */
+        }
+    </style>
 </head>
 
 <body>

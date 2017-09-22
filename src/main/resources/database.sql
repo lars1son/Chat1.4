@@ -1,35 +1,53 @@
--- Table: users
-CREATE TABLE users (
-  id       INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(255) NOT NULL,
-  password VARCHAR(255) NOT NULL
-)
-  ENGINE = InnoDB;
+CREATE TABLE `files` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `path` varchar(250) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8
 
--- Table: roles
-CREATE TABLE roles (
-  id   INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL
-)
-  ENGINE = InnoDB;
+CREATE TABLE `images` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `path` varchar(250) DEFAULT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8
 
--- Table for mapping user and roles: user_roles
-CREATE TABLE user_roles (
-  user_id INT NOT NULL,
-  role_id INT NOT NULL,
 
-  FOREIGN KEY (user_id) REFERENCES users (id),
-  FOREIGN KEY (role_id) REFERENCES roles (id),
+CREATE TABLE `roles` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `name` varchar(100) NOT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8
 
-  UNIQUE (user_id, role_id)
-)
-  ENGINE = InnoDB;
 
--- Insert data
 
-INSERT INTO users VALUES (1, 'proselyte', '$2a$11$uSXS6rLJ91WjgOHhEGDx..VGs7MkKZV68Lv5r1uwFu7HgtRn3dcXG');
+CREATE TABLE `users` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `username` varchar(255) NOT NULL,
+   `password` varchar(255) NOT NULL,
+   `email` varchar(100) DEFAULT NULL,
+   `image_id` int(11) DEFAULT NULL,
+   `about` varchar(100) DEFAULT NULL,
+   PRIMARY KEY (`id`),
+   KEY `users_images_id_fk` (`image_id`),
+   CONSTRAINT `users_images_id_fk` FOREIGN KEY (`image_id`) REFERENCES `images` (`id`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8
 
-INSERT INTO roles VALUES (1, 'ROLE_USER');
-INSERT INTO roles VALUES (2, 'ROLE_ADMIN');
 
-INSERT INTO user_roles VALUES (1, 2);
+CREATE TABLE `user_roles` (
+   `user_id` int(11) NOT NULL,
+   `role_id` int(11) NOT NULL,
+   UNIQUE KEY `user_id` (`user_id`,`role_id`),
+   KEY `role_id` (`role_id`),
+   CONSTRAINT `user_roles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+   CONSTRAINT `user_roles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+
+CREATE TABLE `dialog_config` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `user1` varchar(45) DEFAULT NULL,
+   `user2` varchar(45) DEFAULT NULL,
+   `file_id` int(11) DEFAULT '1',
+   PRIMARY KEY (`id`),
+   KEY `dialog_config_files_id_fk` (`file_id`),
+   CONSTRAINT `dialog_config_files_id_fk` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8

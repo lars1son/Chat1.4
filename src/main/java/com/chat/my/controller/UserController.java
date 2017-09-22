@@ -95,6 +95,7 @@ public class UserController {
     //////////save changes in my profile
     @RequestMapping(value = "/save_changes", method = RequestMethod.POST)
     public String onAddPhoto(@RequestParam String password, @RequestParam String email, @RequestParam String about, @RequestParam(name = "file", required = false) MultipartFile multipartFile) {
+        Boolean acces = false;
         UserEntity user = getUser();
         if (multipartFile != null && !multipartFile.isEmpty() && multipartFile.getOriginalFilename()!="") {
             String newfilename = user.getId().toString() + multipartFile.getOriginalFilename().substring(multipartFile.getOriginalFilename().length() - 4, multipartFile.getOriginalFilename().length());//Поставить на ид польхователя.
@@ -113,20 +114,24 @@ public class UserController {
             } else {
                 user.getImage().setPath(newIm.getPath());
             }
+            acces=true;
 
 
         }
         if (password != null && password.length() >= 8 && password!=user.getPassword()) {
             user.setPassword(password);
+            acces=true;
         }
         if (email != null && !email.isEmpty()) {
             user.setEmail(email);
+            acces=true;
         }
         if (about != null && !about.isEmpty()) {
             user.setAbout(about);
+            acces=true;
         }
-
-        userService.save(user, true);
+        if (acces){
+        userService.save(user, true);}
         return "chat";
     }
 ///////
